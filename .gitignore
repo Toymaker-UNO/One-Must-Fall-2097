@@ -1,0 +1,38 @@
+# 빌드 결과물
+build/
+mingw_build/
+cmake-build-debug/
+cmake-build-release/
+
+# CMake 관련
+build/CMakeFiles/
+build/Makefile
+build/*.cmake
+compile_commands.json
+
+# 실행 파일 및 라이브러리
+build/*.dll
+build/*.exe
+
+# 리소스 및 음악
+build/resources/
+build/music/
+
+# 기타 빌드 파일
+build/*.txt
+build/*.conf
+
+# IDE 및 캐시
+.idea/
+.vscode/
+.cache/
+
+# 파이썬
+__pycache__/
+*.pyc
+
+# 스왑 파일
+*.sw[klmnop]
+
+# vcpkg 설치 폴더
+vcpkg_installed/
