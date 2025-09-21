@@ -13,6 +13,7 @@ compile_commands.json
 # 실행 파일 및 라이브러리
 build/*.dll
 build/*.exe
+test_psm_player.exe
 
 # 리소스 및 음악
 build/resources/
