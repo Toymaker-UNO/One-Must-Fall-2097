@@ -14,6 +14,7 @@ compile_commands.json
 build/*.dll
 build/*.exe
 test_psm_player.exe
+test_sound_player.exe
 
 # 리소스 및 음악
 build/resources/

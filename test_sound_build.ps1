@@ -1,0 +1,1 @@
+g++ test_sound_main.c -o test_sound_player.exe -mconsole -DLIBXMP_STATIC -DXMP_STATIC -ID:\01_Isla_Sorna\psm_tester\x64-mingw-static\include -LD:\01_Isla_Sorna\psm_tester\x64-mingw-static\lib -lSDL2 -lxmp -lzlib -luser32 -lgdi32 -lshell32 -lwinmm -limm32 -lole32 -loleaut32 -lversion -lsetupapi -lws2_32 -lm

@@ -1,11 +1,21 @@
-// main.c — libxmp로 PSM 디코드 + SDL2 오디오 출력 (SDL_mixer 불필요)
-// 창을 만들어 키 입력(ESC) 정상 처리 + ESC/닫기 시 즉시 정지
+// main.c — libxmp로 PSM 디코드 + SDL2 오디오 출력 (+ 진행률 표시)
+// - 창을 만들어 키 입력(ESC) 정상 처리
+// - ESC/닫기 시 즉시 정지 (Pause + ClearQueue)
+// - 진행률: 창 타이틀 & 콘솔에 주기적으로 갱신
 #define SDL_MAIN_HANDLED
 #include <stdio.h>
 #include <stdint.h>
 #include <stdlib.h>
 #include <SDL2/SDL.h>
 #include "xmp.h"
+
+static void fmt_time(int ms, char *out, size_t cap) {
+    if (ms < 0) { snprintf(out, cap, "--:--"); return; }
+    int total_sec = ms / 1000;
+    int mm = total_sec / 60;
+    int ss = total_sec % 60;
+    snprintf(out, cap, "%02d:%02d", mm, ss);
+}
 
 int main(int argc, char **argv) {
     if (argc < 2) {
@@ -17,10 +27,9 @@ int main(int argc, char **argv) {
     const int sample_rate     = 48000;  // 44100~48000 권장
     const int channels        = 2;      // S16LE stereo
     const int bytes_per_samp  = 2;      // S16LE
-    const int chunk_ms        = 10;     // 낮을수록 반응성↑, CPU 사용 약간↑
+    const int chunk_ms        = 10;     // 낮을수록 반응성↑
     const int chunk_bytes     = sample_rate * channels * bytes_per_samp * chunk_ms / 1000;
 
-    // 오디오 + 비디오(창) 초기화: 키 이벤트 받으려면 VIDEO 필요
     if (SDL_Init(SDL_INIT_AUDIO | SDL_INIT_VIDEO | SDL_INIT_EVENTS) != 0) {
         fprintf(stderr, "SDL_Init failed: %s\n", SDL_GetError());
         return 1;
@@ -28,16 +37,16 @@ int main(int argc, char **argv) {
 
     // 아주 작은 제어창(표시해야 포커스/키 이벤트가 옴)
     SDL_Window *win = SDL_CreateWindow(
-        "PSM Player - Press ESC to stop",
+        "PSM Player",
         SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
-        360, 120, SDL_WINDOW_SHOWN
+        380, 130, SDL_WINDOW_SHOWN
     );
     if (!win) {
         fprintf(stderr, "SDL_CreateWindow failed: %s\n", SDL_GetError());
         SDL_Quit();
         return 1;
     }
-    SDL_RaiseWindow(win); // 포커스 끌어오기
+    SDL_RaiseWindow(win);
 
     // libxmp 컨텍스트/모듈 로드
     xmp_context ctx = xmp_create_context();
@@ -47,7 +56,6 @@ int main(int argc, char **argv) {
         SDL_Quit();
         return 1;
     }
-
     if (xmp_load_module(ctx, path) != 0) {
         fprintf(stderr, "xmp_load_module failed (unsupported or corrupt?): %s\n", path);
         xmp_free_context(ctx);
@@ -55,7 +63,6 @@ int main(int argc, char **argv) {
         SDL_Quit();
         return 1;
     }
-
     if (xmp_start_player(ctx, sample_rate, 0) != 0) {
         fprintf(stderr, "xmp_start_player failed\n");
         xmp_release_module(ctx);
@@ -85,7 +92,8 @@ int main(int argc, char **argv) {
     }
 
     SDL_PauseAudioDevice(dev, 0);
-    printf("Playing: %s\n(Press ESC or close the window to stop immediately)\n", path);
+    printf("Playing: %s\n", path);
+    printf("Press ESC or close the window to stop. Progress updates below...\n");
 
     uint8_t *buf = (uint8_t*)malloc((size_t)chunk_bytes);
     if (!buf) {
@@ -99,6 +107,10 @@ int main(int argc, char **argv) {
         SDL_Quit();
         return 1;
     }
+
+    // 진행률 표시 주기(밀리초)
+    const Uint32 progress_interval_ms = 200;
+    Uint32 last_progress_tick = 0;
 
     int running = 1, ended = 0;
     while (running && !ended) {
@@ -123,11 +135,50 @@ int main(int argc, char **argv) {
             fprintf(stderr, "SDL_QueueAudio failed: %s\n", SDL_GetError());
             break;
         }
+
+        // ---- 진행률 갱신 ----
+        Uint32 now = SDL_GetTicks();
+        if (now - last_progress_tick >= progress_interval_ms) {
+            struct xmp_frame_info fi;
+            xmp_get_frame_info(ctx, &fi);  // fi.time / fi.total_time (ms)
+
+            char t_now[16], t_total[16];
+            fmt_time(fi.time, t_now, sizeof(t_now));
+            fmt_time(fi.total_time, t_total, sizeof(t_total));
+
+            int percent = 0;
+            if (fi.total_time > 0 && fi.time >= 0) {
+                // 반올림된 % (0~100)
+                percent = (int)((fi.time * 100LL + fi.total_time / 2) / fi.total_time);
+                if (percent > 100) percent = 100;
+            }
+
+            // 창 타이틀 업데이트
+            char title[256];
+            snprintf(title, sizeof(title), "PSM Player  [%s / %s]  %d%%  -  %s",
+                     t_now, t_total, percent, path);
+            SDL_SetWindowTitle(win, title);
+
+            // 콘솔 한 줄 진행 바(간단)
+            // 30칸 바 + \r 로 덮어쓰기
+            char bar[64];
+            int bars = (percent * 30) / 100;
+            if (bars < 0) bars = 0; if (bars > 30) bars = 30;
+            for (int i = 0; i < 30; ++i) bar[i] = (i < bars) ? '#' : '-';
+            bar[30] = '\0';
+            printf("\r[%s] %3d%%  (%s / %s)   ", bar, percent, t_now, t_total);
+            fflush(stdout);
+
+            last_progress_tick = now;
+        }
     }
 
     // 즉시 정지: 일시정지 + 큐 비우기
     SDL_PauseAudioDevice(dev, 1);
     SDL_ClearQueuedAudio(dev);
+
+    // 줄바꿈 정리
+    printf("\n");
 
     // 정리
     free(buf);
