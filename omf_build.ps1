@@ -51,7 +51,7 @@ function Copy-GameResources {
     }
     
     # Create target directory
-    $targetDir = "build\resource"
+    $targetDir = "build\resources"
     if (-not (Test-Path $targetDir)) {
         Write-Host "Creating resource directory: $targetDir" -ForegroundColor Cyan
         New-Item -ItemType Directory -Path $targetDir -Force | Out-Null
@@ -83,6 +83,6 @@ Clean-BuildDirectory
 New-BuildDirectory
 Invoke-CMakeConfigure
 Invoke-Build
-#Copy-GameResources
+Copy-GameResources
 
 Write-Host "=== Build Completed ===" -ForegroundColor Magenta
