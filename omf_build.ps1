@@ -45,8 +45,8 @@ function Copy-GameResources {
     Write-Host "Copying game resources..." -ForegroundColor Yellow
     
     # Check source directory
-    if (-not (Test-Path "game_resources")) {
-        Write-Host "game_resources directory not found!" -ForegroundColor Red
+    if (-not (Test-Path "resources/game_resources")) {
+        Write-Host "resources/game_resources directory not found!" -ForegroundColor Red
         return
     }
     
@@ -58,7 +58,7 @@ function Copy-GameResources {
     }
     
     # Copy files
-    $sourceFiles = Get-ChildItem -Path "game_resources" -File
+    $sourceFiles = Get-ChildItem -Path "resources/game_resources" -File
     $copiedCount = 0
     
     foreach ($file in $sourceFiles) {

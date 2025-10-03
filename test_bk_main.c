@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#define SDL_MAIN_HANDLED
 #include <SDL.h>
 
 // OMF2097 프로젝트의 헤더 파일들
@@ -40,10 +41,10 @@ void handle_events() {
     }
 }
 
-int main(int argc, char *argv[]) {
+int SDL_main(int argc, char *argv[]) {
     if (argc != 2) {
         printf("사용법: %s <bk_file>\n", argv[0]);
-        printf("예시: %s game_resources/ARENA0.BK\n", argv[0]);
+        printf("예시: %s resources/game_resources/ARENA0.BK\n", argv[0]);
         return 1;
     }
 

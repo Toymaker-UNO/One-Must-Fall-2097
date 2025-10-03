@@ -8,7 +8,7 @@ OPTION(USE_SANITIZERS "Enable Asan and Ubsan" OFF)
 OPTION(USE_FATAL_SANITIZERS "Make Asan and Ubsan errors fatal" OFF)
 OPTION(USE_TIDY "Use clang-tidy for checks" OFF)
 OPTION(USE_FORMAT "Use clang-format for checks" OFF)
-OPTION(BUILD_LANGUAGES "Build Language Files" ON)
+OPTION(BUILD_LANGUAGES "Build Language Files" OFF)
 OPTION(USE_COLORS "Use colors in log output" ON)
 OPTION(USE_OPUSFILE "Support ogg/opus music files" ON)
 
