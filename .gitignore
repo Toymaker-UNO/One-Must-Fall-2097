@@ -1,5 +1,6 @@
 # 빌드 결과물
 build/
+build_org
 mingw_build/
 cmake-build-debug/
 cmake-build-release/

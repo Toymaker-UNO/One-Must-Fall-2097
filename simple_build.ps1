@@ -128,5 +128,28 @@ if (Test-Path $GAME_RESOURCES_DIR) {
     Write-Host "Game resources directory not found!" -ForegroundColor Red
 }
 
+# 셰이더 파일 복사
+Write-Host "Copying shader files..." -ForegroundColor Yellow
+if (Test-Path "shaders") {
+    $SHADER_BUILD_DIR = "$BUILD_DIR/shaders"
+    New-Item -ItemType Directory -Path $SHADER_BUILD_DIR -Force | Out-Null
+    
+    $SHADER_FILES = Get-ChildItem -Path "shaders" -File
+    $COPIED_COUNT = 0
+    
+    foreach ($file in $SHADER_FILES) {
+        try {
+            Copy-Item -Path $file.FullName -Destination "$SHADER_BUILD_DIR/$($file.Name)" -Force
+            $COPIED_COUNT++
+        } catch {
+            Write-Host "Failed to copy shader: $($file.Name)" -ForegroundColor Red
+        }
+    }
+    
+    Write-Host "Copied $COPIED_COUNT shader files" -ForegroundColor Green
+} else {
+    Write-Host "Shaders directory not found!" -ForegroundColor Red
+}
+
 Write-Host "=== Build Completed ===" -ForegroundColor Magenta
 Write-Host "Executable: $BUILD_DIR/$OUTPUT_NAME" -ForegroundColor Cyan
