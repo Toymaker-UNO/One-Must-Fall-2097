@@ -1,7 +1,7 @@
-# Simple Direct Build Script for One Must Fall 2097
-# CMake 없이 직접 GCC로 빌드
+# Simple Direct Build Script for One Must Fall 2097 (C++ Version)
+# CMake 없이 직접 GCC로 C++ 빌드
 
-Write-Host "=== Simple Build Started ===" -ForegroundColor Magenta
+Write-Host "=== C++ Build Started ===" -ForegroundColor Magenta
 
 # 설정
 $SRC_DIR = "src"
@@ -13,9 +13,10 @@ $VCPKG_INCLUDE_DIR = "lib/include"
 $OUTPUT_NAME = "openomf.exe"
 
 # 컴파일러 설정
-$CC = "gcc" # Use C compiler
+$CC = "gcc" # Use C compiler for source files
+$CXX = "g++" # Use C++ compiler for linking
 $CFLAGS = @(
-    "-std=c11",
+    "-std=c11", # Use C11 standard for C files
     "-O2",
     "-w", # Disable all warnings
     "-I$SRC_DIR",
@@ -36,12 +37,12 @@ $CFLAGS = @(
     "-DV_MINOR=0",
     "-DV_PATCH=0",
     "-DPERROR=printf",
-    "-include", "stdbool.h",
-    "-include", "stddef.h",
-    "-include", "stdint.h",
-    "-include", "stdio.h",
-    "-include", "ctype.h",
-    "-include", "string.h"
+    "-fpermissive", # Allow implicit void* conversions
+    "-Wno-jump-misses-init", # Allow goto across variable initialization
+    "-include", "stdint.h", # Include standard integer types
+    "-include", "stddef.h", # Include size_t
+    "-include", "string.h", # Include memset
+    "-include", "stdbool.h" # Include bool type
 )
 
 # 링커 설정
@@ -92,10 +93,33 @@ Write-Host "Found $($SOURCE_FILES.Count) source files" -ForegroundColor Green
 
 # 컴파일
 Write-Host "Compiling..." -ForegroundColor Yellow
-$COMPILE_ARGS = $CFLAGS + $SOURCE_FILES + $LDFLAGS + "-o", "$BUILD_DIR/$OUTPUT_NAME"
+
+# 먼저 모든 .c 파일을 .o 오브젝트 파일로 컴파일
+$OBJECT_FILES = @()
+foreach ($source_file in $SOURCE_FILES) {
+    $object_file = $source_file -replace "\.c$", ".o"
+    $object_file = $object_file -replace "src\\", "$BUILD_DIR\\"
+    $object_dir = Split-Path $object_file -Parent
+    if (!(Test-Path $object_dir)) {
+        New-Item -ItemType Directory -Path $object_dir -Force | Out-Null
+    }
+    
+    $compile_args = $CFLAGS + $source_file + "-c", "-o", $object_file
+    Write-Host "Compiling $source_file..." -ForegroundColor Cyan
+    & $CC @compile_args
+    if ($LASTEXITCODE -ne 0) {
+        Write-Host "Failed to compile $source_file" -ForegroundColor Red
+        exit 1
+    }
+    $OBJECT_FILES += $object_file
+}
+
+# 오브젝트 파일들을 C++ 링커로 링크
+Write-Host "Linking..." -ForegroundColor Yellow
+$LINK_ARGS = $OBJECT_FILES + $LDFLAGS + "-o", "$BUILD_DIR/$OUTPUT_NAME"
 
 try {
-    & $CC @COMPILE_ARGS
+    & $CXX @LINK_ARGS
     if ($LASTEXITCODE -eq 0) {
         Write-Host "Compilation successful!" -ForegroundColor Green
     } else {
