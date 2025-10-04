@@ -45,6 +45,30 @@ $CFLAGS = @(
     "-include", "stdbool.h" # Include bool type
 )
 
+$CXXFLAGS = @(
+    "-std=c++17", # Use C++17 standard for C++ files
+    "-O2",
+    "-w", # Disable all warnings
+    "-I$SRC_DIR",
+    "-I$SRC_DIR/vendored",
+    "-I$VCPKG_INCLUDE_DIR",
+    "-I$VCPKG_INCLUDE_DIR/SDL2",
+    "-DENABLE_SDL_AUDIO_BACKEND",
+    "-DENABLE_NULL_AUDIO_BACKEND",
+    "-DENABLE_OPENGL3_RENDERER",
+    "-DENABLE_NULL_RENDERER",
+    "-DSDL_MAIN_HANDLED",
+    "-DUSE_LIBPNG=1",
+    "-DPNG_FOUND=1",
+    "-DUSE_OPUSFILE=1",
+    "-DLIBXMP_STATIC",
+    "-DXMP_STATIC",
+    "-DV_MAJOR=0",
+    "-DV_MINOR=0",
+    "-DV_PATCH=0",
+    "-DPERROR=printf"
+)
+
 # 링커 설정
 $LDFLAGS = @(
     "-L$VCPKG_LIB_DIR",
@@ -88,15 +112,19 @@ New-Item -ItemType Directory -Path $BUILD_DIR | Out-Null
 
 # 소스 파일 수집
 Write-Host "Collecting source files..." -ForegroundColor Yellow
-$SOURCE_FILES = Get-ChildItem -Path $SRC_DIR -Recurse -Filter "*.c" | ForEach-Object { $_.FullName }
-Write-Host "Found $($SOURCE_FILES.Count) source files" -ForegroundColor Green
+$C_FILES = Get-ChildItem -Path $SRC_DIR -Recurse -Filter "*.c" | ForEach-Object { $_.FullName }
+$CPP_FILES = Get-ChildItem -Path $SRC_DIR -Recurse -Filter "*.cpp" | ForEach-Object { $_.FullName }
+Write-Host "Found $($C_FILES.Count) C source files" -ForegroundColor Green
+Write-Host "Found $($CPP_FILES.Count) C++ source files" -ForegroundColor Green
 
 # 컴파일
 Write-Host "Compiling..." -ForegroundColor Yellow
 
 # 먼저 모든 .c 파일을 .o 오브젝트 파일로 컴파일
 $OBJECT_FILES = @()
-foreach ($source_file in $SOURCE_FILES) {
+
+# C 파일들 컴파일
+foreach ($source_file in $C_FILES) {
     $object_file = $source_file -replace "\.c$", ".o"
     $object_file = $object_file -replace "src\\", "$BUILD_DIR\\"
     $object_dir = Split-Path $object_file -Parent
@@ -105,8 +133,27 @@ foreach ($source_file in $SOURCE_FILES) {
     }
     
     $compile_args = $CFLAGS + $source_file + "-c", "-o", $object_file
-    Write-Host "Compiling $source_file..." -ForegroundColor Cyan
+    Write-Host "Compiling C: $source_file..." -ForegroundColor Cyan
     & $CC @compile_args
+    if ($LASTEXITCODE -ne 0) {
+        Write-Host "Failed to compile $source_file" -ForegroundColor Red
+        exit 1
+    }
+    $OBJECT_FILES += $object_file
+}
+
+# C++ 파일들 컴파일
+foreach ($source_file in $CPP_FILES) {
+    $object_file = $source_file -replace "\.cpp$", ".o"
+    $object_file = $object_file -replace "src\\", "$BUILD_DIR\\"
+    $object_dir = Split-Path $object_file -Parent
+    if (!(Test-Path $object_dir)) {
+        New-Item -ItemType Directory -Path $object_dir -Force | Out-Null
+    }
+    
+    $compile_args = $CXXFLAGS + $source_file + "-c", "-o", $object_file
+    Write-Host "Compiling C++: $source_file..." -ForegroundColor Cyan
+    & $CXX @compile_args
     if ($LASTEXITCODE -ne 0) {
         Write-Host "Failed to compile $source_file" -ForegroundColor Red
         exit 1
