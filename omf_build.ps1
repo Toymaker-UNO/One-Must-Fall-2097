@@ -132,11 +132,11 @@ if (Test-Path $GAME_RESOURCES_DIR) {
 
 # 셰이더 파일 복사
 Write-Host "Copying shader files..." -ForegroundColor Yellow
-if (Test-Path "shaders") {
+if (Test-Path "resources/shaders") {
     $SHADER_BUILD_DIR = "$BUILD_DIR/shaders"
     New-Item -ItemType Directory -Path $SHADER_BUILD_DIR -Force | Out-Null
     
-    $SHADER_FILES = Get-ChildItem -Path "shaders" -File
+    $SHADER_FILES = Get-ChildItem -Path "resources/shaders" -File
     $COPIED_COUNT = 0
     
     foreach ($file in $SHADER_FILES) {
