@@ -26,8 +26,5 @@ build/
 *.temp
 *.log
 
-# vcpkg 설치 폴더 (라이브러리 포함)
-vcpkg_installed/
-
 # Git 관련
 *.orig

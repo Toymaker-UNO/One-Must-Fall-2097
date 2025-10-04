@@ -8,8 +8,8 @@ $SRC_DIR = "src"
 $BUILD_DIR = "build"
 $RESOURCES_DIR = "resources"
 $GAME_RESOURCES_DIR = "resources/game_resources"
-$VCPKG_LIB_DIR = "vcpkg_installed/x64-mingw-static/lib"
-$VCPKG_INCLUDE_DIR = "vcpkg_installed/x64-mingw-static/include"
+$VCPKG_LIB_DIR = "lib/bin"
+$VCPKG_INCLUDE_DIR = "lib/include"
 $OUTPUT_NAME = "openomf.exe"
 
 # 컴파일러 설정
