@@ -1,41 +1,33 @@
 # 빌드 결과물
 build/
-build_org
-mingw_build/
-cmake-build-debug/
-cmake-build-release/
 
-# CMake 관련
-build/CMakeFiles/
-build/Makefile
-build/*.cmake
-compile_commands.json
+# 실행 파일
+*.exe
+*.dll
+*.so
+*.dylib
 
-# 실행 파일 및 라이브러리
-build/*.dll
-build/*.exe
-test_psm_player.exe
-test_sound_player.exe
-
-# 리소스 및 음악
-build/resources/
-build/music/
-
-# 기타 빌드 파일
-build/*.txt
-build/*.conf
+# 오브젝트 파일
+*.o
+*.obj
+*.a
+*.lib
 
 # IDE 및 캐시
 .idea/
 .vscode/
 .cache/
+*.swp
+*.swo
+*~
 
-# 파이썬
-__pycache__/
-*.pyc
+# 임시 파일
+*.tmp
+*.temp
+*.log
 
-# 스왑 파일
-*.sw[klmnop]
-
-# vcpkg 설치 폴더
+# vcpkg 설치 폴더 (라이브러리 포함)
 vcpkg_installed/
+
+# Git 관련
+*.orig
